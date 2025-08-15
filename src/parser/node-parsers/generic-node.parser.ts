@@ -36,6 +36,7 @@ import { SpawnActorNodeParser } from "./spawn-actor-node.parser";
 import { TunnelNodeParser } from "./tunnel-node.parser";
 import { CreateWidgetNodeParser } from "./create-widget-node.parser";
 import { CreateObjectNodeParser } from "./create-object-node.parser";
+import { NodeParserRegistry } from "../node-parser-registry";
 
 
 export class GenericNodeParser extends NodeParser {
@@ -98,6 +99,20 @@ export class GenericNodeParser extends NodeParser {
             "ErrorType": (node: Node, v: string) => { node.errorType = Number.parseInt(v); },
             "ErrorMsg": (node: Node, v: string) => { node.errorMsg = v.replace(/["]/g, '').replace(/\\\'/g, '\''); }
         });
+
+        const registry = NodeParserRegistry.getInstance();
+        for (const nodeClass of Object.values(UnrealNodeClass)) {
+            const pluginParser = registry.getParser(nodeClass);
+            if (pluginParser) {
+                this._nodeParsers[nodeClass] = pluginParser;
+            }
+        }
+
+        registry.autoLoadPlugins();
+
+        for (const [nodeClass, parserFactory] of registry.parsers) {
+            this._nodeParsers[nodeClass] = parserFactory;
+        }
     }
 
     public parse(data: ParsingNodeData): NodeControl {
