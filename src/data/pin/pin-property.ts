@@ -50,6 +50,7 @@ export class PinProperty extends CustomProperty {
 
     hideName: boolean;
     showInHead: boolean;
+    subPins: string;
 
     constructor(nodeName: string) {
         super();

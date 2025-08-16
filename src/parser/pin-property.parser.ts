@@ -75,6 +75,9 @@ export class PinPropertyParser implements CustomPropertyParser {
         "PinType.bSerializeAsSinglePrecisionFloat": (p: PinProperty, value: string) => {
             p.serializeAsSinglePrecisionFloat = value.toLowerCase() === "true";
         },
+        "SubPins": (p: PinProperty, value: string) => {
+            p.subPins = value;
+        },
     }
 
     parse(propertyData: string, nodeName: string): PinProperty {
