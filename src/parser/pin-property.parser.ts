@@ -72,6 +72,9 @@ export class PinPropertyParser implements CustomPropertyParser {
             //     console.log(`Found interesting attribute 'PinType.PinSubCategoryMemberReference' for which a value other than '()' was set. PinType.PinSubCategoryMemberReference='${value}' [pin-name: ${p.name}]`);
             // }
         },
+        "PinType.bSerializeAsSinglePrecisionFloat": (p: PinProperty, value: string) => {
+            p.serializeAsSinglePrecisionFloat = value.toLowerCase() === "true";
+        },
     }
 
     parse(propertyData: string, nodeName: string): PinProperty {
