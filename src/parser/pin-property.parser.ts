@@ -78,6 +78,9 @@ export class PinPropertyParser implements CustomPropertyParser {
         "SubPins": (p: PinProperty, value: string) => {
             p.subPins = value;
         },
+        "ParentPin": (p: PinProperty, value: string) => {
+            p.parentPin = BlueprintParserUtils.parseString(value);
+        },
     }
 
     parse(propertyData: string, nodeName: string): PinProperty {
