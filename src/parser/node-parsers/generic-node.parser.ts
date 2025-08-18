@@ -84,6 +84,7 @@ export class GenericNodeParser extends NodeParser {
         [key: string]: () => CustomPropertyParser
     } = {
         "Pin": () => new PinPropertyParser(),
+        "UserDefinedPin": () => new PinPropertyParser(),
     }
 
     constructor() {
@@ -162,7 +163,8 @@ export class GenericNodeParser extends NodeParser {
                 data.node.customProperties.push(property);
 
                 if (property instanceof PinProperty) {
-                    if ((property as PinProperty).subCategoryObject.class === StructClass.LatentActionInfo) {
+                    const pinProp = property as PinProperty;
+                    if (pinProp.subCategoryObject && pinProp.subCategoryObject.class === StructClass.LatentActionInfo) {
                         data.node.latent = true;
                     }
                 }
