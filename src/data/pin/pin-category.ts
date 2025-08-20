@@ -8,6 +8,7 @@ export enum PinCategory {
     string = "string",
     text = "text",
     float = "float",
+    real = "real",
     struct = "struct",
     class = "class",
     bool = "bool",

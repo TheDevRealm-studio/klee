@@ -274,6 +274,7 @@ export class PinPropertyParser implements CustomPropertyParser {
 
         switch (p.category) {
             case PinCategory.float:
+            case PinCategory.real:
                 return { control: TextBoxControl, data: removeInsignificantTrailingZeros(BlueprintParserUtils.parseString(value)) };
             case PinCategory.bool:
                 return { control: CheckBoxControl, data: (BlueprintParserUtils.parseString(value).toLowerCase() === "true") };
