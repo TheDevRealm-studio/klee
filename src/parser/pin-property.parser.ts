@@ -223,6 +223,11 @@ export class PinPropertyParser implements CustomPropertyParser {
                         key = lastValue;
                         args[key] = value;
                     }
+                } else if (prop.startsWith("INVTEXT")) {
+                    const invtextMatch = prop.match(/INVTEXT\("([^"]*)"\)/);
+                    if (invtextMatch && (index + offset) % 2 == 1) {
+                        args[namingkKey] = invtextMatch[1];
+                    }
                 } else {
                     if ((index + offset) % 2 == 0) {
                         namingkKey = prop.replace(/"/g, '');
