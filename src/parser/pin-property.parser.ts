@@ -26,6 +26,7 @@ export class PinPropertyParser implements CustomPropertyParser {
         "PinFriendlyName": (p: PinProperty, value: string) => { p.friendlyName = prettifyText(PinPropertyParser.parsePinFriendlyName(value)); },
         "PinType.PinCategory": (p: PinProperty, value: string) => { p.category = PinPropertyParser.parsePinCategory(value); },
         "Direction": (p: PinProperty, value: string) => { p.direction = PinPropertyParser.parseDirection(value); },
+        "DesiredPinDirection": (p: PinProperty, value: string) => { p.direction = PinPropertyParser.parseDirection(value); },
         "PinToolTip": (p: PinProperty, value: string) => { p.toolTip = BlueprintParserUtils.parseString(value); },
         "PinType.PinSubCategory": (p: PinProperty, value: string) => { p.subCategory = BlueprintParserUtils.parseString(value); },
         "PinType.PinSubCategoryObject": (p: PinProperty, value: string) => { p.subCategoryObject = PinPropertyParser.parseSubCategoryObject(value); },
