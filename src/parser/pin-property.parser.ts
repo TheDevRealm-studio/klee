@@ -317,6 +317,16 @@ export class PinPropertyParser implements CustomPropertyParser {
                 color.applyGamma();
                 return { control: ColorBoxControl, data: color};
             default:
+                if (subCategoryObject.includes('LinearColor')) {
+                    const cParams = this.parseDefaultValueStructCommon(value).map(p => Number(p.value));
+                    const color = new Color(
+                        (cParams[0] || 0) * 255,
+                        (cParams[1] || 0) * 255,
+                        (cParams[2] || 0) * 255,
+                        cParams[3]);
+                    color.applyGamma();
+                    return { control: ColorBoxControl, data: color};
+                }
                 return { control: StructBoxControl, data: this.parseDefaultValueStructCommon(value) };
         }
     }
