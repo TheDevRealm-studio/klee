@@ -7,7 +7,7 @@ module.exports = merge(common, {
     devtool: 'inline-source-map',
     devServer: {
         open: true,
-        watchFiles: ['test', 'src'],
+        watchFiles: ['test', 'src', 'plugins'],
         compress: true,
         static: [
             {
