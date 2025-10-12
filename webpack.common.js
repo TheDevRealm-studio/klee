@@ -10,7 +10,10 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                include: path.resolve(__dirname, 'src'),
+                include: [
+                    path.resolve(__dirname, 'src'), 
+                    path.resolve(__dirname, 'plugins')
+                ],
                 use: [
                     { loader: 'ts-loader' }, 
                     { loader: 'ifdef-loader', options: ifdefOptions }, 
@@ -21,5 +24,9 @@ module.exports = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
+        alias: {
+            src: path.resolve(__dirname, "src/"),
+            plugins: path.resolve(__dirname, "plugins/")
+        }
     },
 };

@@ -1,5 +1,6 @@
 import { NodeControl } from "../controls/nodes/node.control";
 import { BlueprintParserUtils } from "./blueprint-parser-utils";
+import { NodeParserRegistry } from "./node-parser-registry";
 import { GenericNodeParser } from "./node-parsers/generic-node.parser";
 import { ParsingNodeData } from "./parsing-node-data";
 
@@ -9,8 +10,13 @@ export class BlueprintParser {
     private readonly _OBJECT_ENDING_TAG = "End Object";
 
     private _lines: string[];
+    private _nodeParserRegistry: NodeParserRegistry;
 
-    constructor() {}
+    constructor() {
+
+        this._nodeParserRegistry = new NodeParserRegistry();
+        this._nodeParserRegistry.loadPlugins();
+    }
 
     parseBlueprint(blueprintData: string): Array<NodeControl> {
 
@@ -28,7 +34,7 @@ export class BlueprintParser {
 
                 lines.unshift(line);
 
-                controls.push(new GenericNodeParser().parse(new ParsingNodeData(lines)));
+                controls.push(new GenericNodeParser(this._nodeParserRegistry).parse(new ParsingNodeData(lines)));
             }
         }
 

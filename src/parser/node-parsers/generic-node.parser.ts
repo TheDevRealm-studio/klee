@@ -1,85 +1,22 @@
-import { UnrealNodeClass } from "../../data/classes/unreal-node-class";
-import { CommentNodeParser } from "./comment-node.parser";
 import { CustomPropertyParser } from "../custom-property.parser";
 import { NodeParser } from "../node.parser";
 import { Node } from "../../data/nodes/node";
 import { ParsingNodeData } from "../parsing-node-data";
-import { CallFunctionNodeParser } from "./call-function-node.parser";
-import { InputAxisNodeParser } from "./input-axis-node.parser";
-import { VariableNodeParser } from "./variable-node.parser";
 import { PinPropertyParser } from "../pin-property.parser";
 import { CustomProperty } from "../../data/custom-property";
 import { NodeControl } from "../../controls/nodes/node.control";
 import { HeadedNodeControl } from "../../controls/nodes/headed-node-control";
 import { Vector2 } from "../../math/vector2";
-import { FlowControlNodeParser } from "./flow-control-node.parser";
-import { KnotNodeParser } from "./knot-node.parser";
-import { CustomEventNodeParser } from "./custom-event-node.parser";
-import { EventNodeParser } from "./event-node.parser";
-import { InputKeyNodeParser } from "./input-key-node.parser";
-import { DynamicCastNodeParser } from "./dynamic-cast-node.parser";
-import { SwitchEnumNodeParser } from "./switch-enum-node.parser";
 import { PinProperty } from "../../data/pin/pin-property";
 import { PinDirection } from "../../data/pin/pin-direction";
 import { PinCategory } from "../../data/pin/pin-category";
-import { MacroInstanceNodeParser } from "./macro-instance-node.parser";
-import { FunctionEntryNodeParser } from "./function-entry-node.parser";
-import { GetArrayItemNodeParser } from "./get-array-item-node.parser";
-import { MakeArrayNodeParser } from "./make-array-node.parser";
-import { InputTouchNodeParser } from "./input-touch-node.parser";
-import { GetInputAxisKeyValueNodeParser } from "./get-input-axis-key-value-node.parser";
-import { StructNodeParser } from "./struct-node.parser";
 import { StructClass } from "../../controls/utils/color-utils";
-import { SelectNodeParser } from "./select-node.parser";
-import { TimelineNodeParser } from "./timeline-node.parser";
-import { SpawnActorNodeParser } from "./spawn-actor-node.parser";
-import { TunnelNodeParser } from "./tunnel-node.parser";
-import { CreateWidgetNodeParser } from "./create-widget-node.parser";
-import { CreateObjectNodeParser } from "./create-object-node.parser";
+import { NodeParserRegistry } from "../node-parser-registry";
 
 
 export class GenericNodeParser extends NodeParser {
 
     private readonly _OBJECT_STARTING_TAG = "Begin Object";
-
-    private _nodeParsers: {
-        [key in UnrealNodeClass]: () => NodeParser
-    } = {
-        [UnrealNodeClass.KNOT]: () => new KnotNodeParser(),
-        [UnrealNodeClass.CALL_FUNCTION]: () => new CallFunctionNodeParser(),
-        [UnrealNodeClass.IF_THEN_ELSE]: () => new FlowControlNodeParser(),
-        [UnrealNodeClass.EXECUTION_SEQUENCE]: () => new FlowControlNodeParser(),
-        [UnrealNodeClass.MULTI_GATE]: () => new FlowControlNodeParser(),
-        [UnrealNodeClass.VARIABLE_GET]: () => new VariableNodeParser(),
-        [UnrealNodeClass.VARIABLE_SET]: () => new VariableNodeParser(),
-        [UnrealNodeClass.EVENT]: () => new EventNodeParser(),
-        [UnrealNodeClass.CUSTOM_EVENT]: () => new CustomEventNodeParser(),
-        [UnrealNodeClass.INPUT_AXIS_EVENT]: () => new InputAxisNodeParser(),
-        [UnrealNodeClass.COMMENT]: () => new CommentNodeParser(),
-        [UnrealNodeClass.INPUT_KEY]: () => new InputKeyNodeParser(),
-        [UnrealNodeClass.CommutativeAssociativeBinaryOperator]: () => new CallFunctionNodeParser(),
-        [UnrealNodeClass.DYNAMIC_CAST]: () => new DynamicCastNodeParser(),
-        [UnrealNodeClass.SWITCH_ENUM]: () => new SwitchEnumNodeParser(),
-        [UnrealNodeClass.MACRO_INSTANCE]: () => new MacroInstanceNodeParser(),
-        [UnrealNodeClass.FUNCTION_ENTRY]: () => new FunctionEntryNodeParser(),
-        [UnrealNodeClass.FUNCTION_RESULT]: () => new FunctionEntryNodeParser(),
-        [UnrealNodeClass.CALL_ARRAY_FUNCTION]: () => new CallFunctionNodeParser(),
-        [UnrealNodeClass.SELF]: () => new VariableNodeParser(),
-        [UnrealNodeClass.GET_ARRAY_ITEM]: () => new GetArrayItemNodeParser(),
-        [UnrealNodeClass.MAKE_ARRAY]: () => new MakeArrayNodeParser(),
-        [UnrealNodeClass.INPUT_TOUCH]: () => new InputTouchNodeParser(),
-        [UnrealNodeClass.GET_INPUT_AXIS_KEY_VALUE]: () => new GetInputAxisKeyValueNodeParser(),
-        [UnrealNodeClass.SET_FIELDS_IN_STRUCT]: () => new StructNodeParser(),
-        [UnrealNodeClass.BREAK_STRUCT]: () => new StructNodeParser(),
-        [UnrealNodeClass.MAKE_STRUCT]: () => new StructNodeParser(),
-        [UnrealNodeClass.SELECT]: () => new SelectNodeParser(),
-        [UnrealNodeClass.TIMELINE]: () => new TimelineNodeParser(),
-        [UnrealNodeClass.SPAWN_ACTOR_FROM_CLASS]: () => new SpawnActorNodeParser(),
-        [UnrealNodeClass.TUNNEL]: () => new TunnelNodeParser(),
-        [UnrealNodeClass.CREATE_WIDGET]: () => new CreateWidgetNodeParser(),
-        [UnrealNodeClass.CREATE_OBJECT]: () => new CreateObjectNodeParser(),
-    }
-
     private readonly _customPropertyParsers: {
         [key: string]: () => CustomPropertyParser
     } = {
@@ -87,7 +24,9 @@ export class GenericNodeParser extends NodeParser {
         "UserDefinedPin": () => new PinPropertyParser(),
     }
 
-    constructor() {
+    private readonly _parserRegistry: NodeParserRegistry;
+
+    constructor(nodeParserRegistry: NodeParserRegistry) {
         super({
             "NodeGuid": (node: Node, v: string) => { node.guid = v; },
             "NodePosX": (node: Node, v: string) => { node.pos.x = Number.parseInt(v); },
@@ -99,6 +38,7 @@ export class GenericNodeParser extends NodeParser {
             "ErrorType": (node: Node, v: string) => { node.errorType = Number.parseInt(v); },
             "ErrorMsg": (node: Node, v: string) => { node.errorMsg = v.replace(/["]/g, '').replace(/\\\'/g, '\''); }
         });
+        this._parserRegistry = nodeParserRegistry;
     }
 
     public parse(data: ParsingNodeData): NodeControl {
@@ -118,12 +58,10 @@ export class GenericNodeParser extends NodeParser {
             latent: false,
         }
 
-
         this.parseProperties(data);
-
         this.parseCustomProperties(data);
 
-        const particularImplementation = this._nodeParsers[data.node.class];
+        const particularImplementation = this._parserRegistry.getParser(data.node.class);
         if(!particularImplementation) {
             console.info(`There is no particular implementation for class ${data.node.class}. Falling back to the generic node class.`);
             return new HeadedNodeControl(data.node);
