@@ -25,7 +25,15 @@ export class PinPropertyParser implements CustomPropertyParser {
         "PinName": (p: PinProperty, value: string) => { p.name = prettifyText(BlueprintParserUtils.parseString(value)); },
         "PinFriendlyName": (p: PinProperty, value: string) => { p.friendlyName = prettifyText(PinPropertyParser.parsePinFriendlyName(value)); },
         "PinType.PinCategory": (p: PinProperty, value: string) => { p.category = PinPropertyParser.parsePinCategory(value); },
+        "PinType": (p: PinProperty, value: string) => {
+            // UserDefinedPin format: PinType=(PinCategory="bool")
+            const categoryMatch = value.match(/PinCategory="([^"]+)"/);
+            if (categoryMatch) {
+                p.category = PinPropertyParser.parsePinCategory(`"${categoryMatch[1]}"`);
+            }
+        },
         "Direction": (p: PinProperty, value: string) => { p.direction = PinPropertyParser.parseDirection(value); },
+        "DesiredPinDirection": (p: PinProperty, value: string) => { p.direction = PinPropertyParser.parseDirection(value); },
         "PinToolTip": (p: PinProperty, value: string) => { p.toolTip = BlueprintParserUtils.parseString(value); },
         "PinType.PinSubCategory": (p: PinProperty, value: string) => { p.subCategory = BlueprintParserUtils.parseString(value); },
         "PinType.PinSubCategoryObject": (p: PinProperty, value: string) => { p.subCategoryObject = PinPropertyParser.parseSubCategoryObject(value); },
@@ -71,6 +79,15 @@ export class PinPropertyParser implements CustomPropertyParser {
             // if(value && value != '()') {
             //     console.log(`Found interesting attribute 'PinType.PinSubCategoryMemberReference' for which a value other than '()' was set. PinType.PinSubCategoryMemberReference='${value}' [pin-name: ${p.name}]`);
             // }
+        },
+        "PinType.bSerializeAsSinglePrecisionFloat": (p: PinProperty, value: string) => {
+            p.serializeAsSinglePrecisionFloat = value.toLowerCase() === "true";
+        },
+        "SubPins": (p: PinProperty, value: string) => {
+            p.subPins = value;
+        },
+        "ParentPin": (p: PinProperty, value: string) => {
+            p.parentPin = BlueprintParserUtils.parseString(value);
         },
     }
 
@@ -206,6 +223,11 @@ export class PinPropertyParser implements CustomPropertyParser {
                         key = lastValue;
                         args[key] = value;
                     }
+                } else if (prop.startsWith("INVTEXT")) {
+                    const invtextMatch = prop.match(/INVTEXT\("([^"]*)"\)/);
+                    if (invtextMatch && (index + offset) % 2 == 1) {
+                        args[namingkKey] = invtextMatch[1];
+                    }
                 } else {
                     if ((index + offset) % 2 == 0) {
                         namingkKey = prop.replace(/"/g, '');
@@ -257,13 +279,16 @@ export class PinPropertyParser implements CustomPropertyParser {
 
         switch (p.category) {
             case PinCategory.float:
+            case PinCategory.real:
                 return { control: TextBoxControl, data: removeInsignificantTrailingZeros(BlueprintParserUtils.parseString(value)) };
             case PinCategory.bool:
                 return { control: CheckBoxControl, data: (BlueprintParserUtils.parseString(value).toLowerCase() === "true") };
             case PinCategory.struct:
-                return this.parseDefaultValueStruct(p.subCategoryObject.class, value);
+                if (p.subCategoryObject && p.subCategoryObject.class) {
+                    return this.parseDefaultValueStruct(p.subCategoryObject.class, value);
+                }
             case PinCategory.byte:
-                if (p.subCategoryObject.type === "Enum") {
+                if (p.subCategoryObject && p.subCategoryObject.type === "Enum") {
                     return { control: TextBoxControl, data: BlueprintParserUtils.parseEnumValue(p.subCategoryObject.class, value) };
                 } else {
                     return { control: TextBoxControl, data: BlueprintParserUtils.parseString(value) };
@@ -292,6 +317,16 @@ export class PinPropertyParser implements CustomPropertyParser {
                 color.applyGamma();
                 return { control: ColorBoxControl, data: color};
             default:
+                if (subCategoryObject.includes('LinearColor')) {
+                    const cParams = this.parseDefaultValueStructCommon(value).map(p => Number(p.value));
+                    const color = new Color(
+                        (cParams[0] || 0) * 255,
+                        (cParams[1] || 0) * 255,
+                        (cParams[2] || 0) * 255,
+                        cParams[3]);
+                    color.applyGamma();
+                    return { control: ColorBoxControl, data: color};
+                }
                 return { control: StructBoxControl, data: this.parseDefaultValueStructCommon(value) };
         }
     }
@@ -356,13 +391,15 @@ export class PinPropertyParser implements CustomPropertyParser {
                 p.defaultValue = "  ";
                 p.defaultValueControlClass = TextBoxControl;
             case PinCategory.struct:
-                switch (p.subCategoryObject.class) {
-                    case StructClass.VECTOR2D:
-                        p.defaultValue = [
-                            { key: 'X', value: '0.0' },
-                            { key: 'Y', value: '0.0' }];
-                        p.defaultValueControlClass = StructBoxControl;
-                        break;
+                if (p.subCategoryObject && p.subCategoryObject.class) {
+                    switch (p.subCategoryObject.class) {
+                        case StructClass.VECTOR2D:
+                            p.defaultValue = [
+                                { key: 'X', value: '0.0' },
+                                { key: 'Y', value: '0.0' }];
+                            p.defaultValueControlClass = StructBoxControl;
+                            break;
+                    }
                 }
                 break;
         }

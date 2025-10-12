@@ -26,6 +26,7 @@ export class CallFunctionNodeParser extends NodeParser {
     constructor() {
         super({
             "bIsPureFunc": (node: CallFunctionNode, value: string) => { node.isPureFunc = (value === "True"); },
+            "bDefaultsToPureFunc": (node: CallFunctionNode, value: string) => { node.isPureFunc = (value === "True"); },
             "bIsConstFunc": (node: CallFunctionNode, value: string) => { node.isConstFunc = (value === "True"); },
             "FunctionReference": (node: CallFunctionNode, value: string) => {
                 const parser = new NodeDataReferenceParser();

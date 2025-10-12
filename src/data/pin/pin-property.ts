@@ -27,6 +27,7 @@ export class PinProperty extends CustomProperty {
     isConst: boolean;
     isWeakPointer: boolean;
     isUObjectWrapper: boolean;
+    serializeAsSinglePrecisionFloat: boolean;
 
     linkedTo: PinLink[];
     persistentGUID: string;
@@ -49,6 +50,8 @@ export class PinProperty extends CustomProperty {
 
     hideName: boolean;
     showInHead: boolean;
+    subPins: string;
+    parentPin: string;
 
     constructor(nodeName: string) {
         super();

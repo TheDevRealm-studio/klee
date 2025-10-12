@@ -13,7 +13,7 @@ export enum StructClass {
 export class ColorUtils {
 
     public static getPinColor(pin: PinProperty): string {
-        return this.getPinColorByCategory(pin.category, pin.subCategoryObject.class);
+        return this.getPinColorByCategory(pin.category, pin.subCategoryObject?.class);
     }
 
     public static getPinColorByCategory(category: PinCategory, subCategoryObject?: string): string {
@@ -23,6 +23,7 @@ export class ColorUtils {
             case PinCategory.bool:
                 return 'rgb(146, 1, 1)';
             case PinCategory.float:
+            case PinCategory.real:
                 return 'rgb(158, 250, 68)';
             case PinCategory.int:
                 return 'rgb(30, 226, 174)';
