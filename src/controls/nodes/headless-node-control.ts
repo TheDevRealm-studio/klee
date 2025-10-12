@@ -8,7 +8,7 @@ import { HorizontalSpacerControl } from "../horizontal-spacer.control";
 
 export class HeadlessNodeControl extends NodeControl {
 
-    private static readonly _NODE_BACKGROUND_COLOR = "rgba(15,15,15,0.6)";
+    private static readonly _NODE_BACKGROUND_COLOR = Constants.BLACK;
 
     constructor(node: Node) {
         super(node);
