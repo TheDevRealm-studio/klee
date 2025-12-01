@@ -84,7 +84,9 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# ignore all the dist/ folders but keep the dist/klee.min.js
+dist/*
+!dist/klee.min.js
 
 # Gatsby files
 .cache/
