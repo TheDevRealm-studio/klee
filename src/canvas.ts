@@ -12,11 +12,20 @@ export class Canvas2D {
     private _element: HTMLCanvasElement;
     private _context: CanvasRenderingContext2D;
     private readonly _PI_TIMES_TWO: number;
+    private _pixelRatio: number = 1;
 
     constructor(element: HTMLCanvasElement) {
         this._element = element;
         this._context = this._element.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
         this._PI_TIMES_TWO = Math.PI * 2;
+    }
+
+    set pixelRatio(value: number) {
+        this._pixelRatio = value;
+    }
+
+    get pixelRatio(): number {
+        return this._pixelRatio;
     }
 
     getBoundingClientRect(): DOMRect {
@@ -116,8 +125,8 @@ export class Canvas2D {
 
     clear() {
         // Use the identity matrix while clearing the canvas
-        this._context.setTransform(1, 0, 0, 1, 0, 0);
-        this._context.clearRect(0, 0, this._element.width, this._element.height);
+        this._context.setTransform(this._pixelRatio, 0, 0, this._pixelRatio, 0, 0);
+        this._context.clearRect(0, 0, this._element.width / this._pixelRatio, this._element.height / this._pixelRatio);
         return this;
     }
 
@@ -213,10 +222,10 @@ export class Canvas2D {
     }
 
     get width() {
-        return this._element.width;
+        return this._element.width / this._pixelRatio;
     }
 
     get height() {
-        return this._element.height;
+        return this._element.height / this._pixelRatio;
     }
 }

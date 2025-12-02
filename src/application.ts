@@ -81,8 +81,11 @@ export class Application {
     }
 
     public refresh() {
-        this._element.width = this._element.offsetWidth;
-        this._element.height = this._element.offsetHeight;
+        const pixelRatio = window.devicePixelRatio || 1;
+        this._canvas.pixelRatio = pixelRatio;
+        this._element.width = this._element.offsetWidth * pixelRatio;
+        this._element.height = this._element.offsetHeight * pixelRatio;
+
         this._scene.collectInteractables();
         this._scene.updateLayout();
         this._scene.refresh();
