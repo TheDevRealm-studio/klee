@@ -67,12 +67,20 @@ export class HeadedNodeControl extends NodeControl implements DrawableControl {
     protected onDraw(canvas: Canvas2D) {
         super.onDraw(canvas);
 
+        const ctx = canvas.getContext();
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.45)";
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4;
+
         canvas.fillStyle(Constants.NODE_BACKGROUND_COLOR)
             .font(Constants.NODE_FONT)
-            .roundedRectangle(0, 0, this.size.x, this.size.y, 5)
-            .fill()
+            .roundedRectangle(0, 0, this.size.x, this.size.y, 6)
+            .fill();
+        ctx.restore();
 
-        canvas.roundedRectangle(0, 0, this.size.x, this.size.y, 5);
+        canvas.roundedRectangle(0, 0, this.size.x, this.size.y, 6);
         this.drawStroke(canvas);
     }
 }

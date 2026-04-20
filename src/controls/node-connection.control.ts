@@ -18,6 +18,7 @@ export class NodeConnectionControl extends UserControl {
     private curveValue: number;
     private color: string;
     private lineWidth: number;
+    private isExec: boolean;
 
     constructor(pinStart: PinControl, pinEnd: PinControl) {
         super(0, 0, -1);
@@ -33,7 +34,36 @@ export class NodeConnectionControl extends UserControl {
         this.curveValue = distance * 0.4;
         this.color = ColorUtils.getPinColor(this.pinStart.pinProperty);
 
-        this.lineWidth = (this.pinStart.pinProperty.category === PinCategory.exec) ? 2.5 : 1.5;
+        this.isExec = this.pinStart.pinProperty.category === PinCategory.exec;
+        this.lineWidth = this.isExec ? 2.5 : 1.5;
+    }
+
+    public get execWire(): boolean {
+        return this.isExec;
+    }
+
+    public get startNodeName(): string {
+        return this.pinStart.pinProperty.nodeName;
+    }
+
+    public get endNodeName(): string {
+        return this.pinEnd.pinProperty.nodeName;
+    }
+
+    private drawPath(canvas: Canvas2D) {
+        canvas
+            .beginPath()
+            .moveTo(this.pinStartPosition.x, this.pinStartPosition.y)
+            .lineTo(this.pinStartPosition.x + 6, this.pinStartPosition.y)
+            .bezierCurveTo(
+                this.pinStartPosition.x + this.curveValue + 6,
+                this.pinStartPosition.y,
+                this.pinEndPosition.x - this.curveValue - 6,
+                this.pinEndPosition.y,
+                this.pinEndPosition.x - 6,
+                this.pinEndPosition.y
+            )
+            .lineTo(this.pinEndPosition.x, this.pinEndPosition.y);
     }
 
     onDraw(canvas: Canvas2D): void {
@@ -43,20 +73,22 @@ export class NodeConnectionControl extends UserControl {
         let distance = Math.sqrt((difference.x * difference.x) + (difference.y * difference.y)) - 12;
         this.curveValue = distance * 0.4;
 
-        canvas.lineWidth(this.lineWidth)
-        .beginPath()
-        .moveTo(this.pinStartPosition.x, this.pinStartPosition.y)
-        .strokeStyle(this.color)
-        .lineTo(this.pinStartPosition.x + 6, this.pinStartPosition.y)
-        .bezierCurveTo(
-            this.pinStartPosition.x + this.curveValue + 6,
-            this.pinStartPosition.y,
-            this.pinEndPosition.x - this.curveValue - 6,
-            this.pinEndPosition.y,
-            this.pinEndPosition.x - 6,
-            this.pinEndPosition.y
-        )
-        .lineTo(this.pinEndPosition.x, this.pinEndPosition.y)
-        .stroke();
+        canvas.lineWidth(this.lineWidth).strokeStyle(this.color);
+        this.drawPath(canvas);
+        canvas.stroke();
+
+        if (this.isExec && this.app && (this.app as any).animationEnabled) {
+            const ctx = canvas.getContext();
+            ctx.save();
+            ctx.globalAlpha = 0.85;
+            ctx.lineCap = "round";
+            ctx.setLineDash([6, 18]);
+            ctx.lineDashOffset = -((this.app as any).animationTime || 0) * 0.06;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = this.lineWidth;
+            this.drawPath(canvas);
+            canvas.stroke();
+            ctx.restore();
+        }
     }
 }

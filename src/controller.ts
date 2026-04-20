@@ -56,6 +56,7 @@ export class Controller {
         element.onmouseleave = (ev) => this.onMouseLeave(ev);
         element.onkeydown = (ev) => this.onKeydown(ev);
         element.oncontextmenu = (ev) => this.onContextMenu(ev);
+        element.addEventListener('wheel', (ev) => this.onWheel(ev), { passive: false });
 
         this.registerAction({
             ctrl: true,
@@ -159,12 +160,14 @@ export class Controller {
             }
 
             if(this._mouseDownData.buttonType === MouseButton.Left) {
-                const delta = currentMousePosition.subtract(this._mouseDownData.position);
+                const scale = this.app.scene.camera.scale;
+                const deltaScreen = currentMousePosition.subtract(this._mouseDownData.position);
+                const deltaWorld = new Vector2(deltaScreen.x / scale, deltaScreen.y / scale);
                 this.app.scene.refresh();
 
                 const mouseDownAbsolutePos = this.getAbsoluteMouseDownPosition(ev);
-                this.drawMouseSelection(mouseDownAbsolutePos.x, mouseDownAbsolutePos.y, delta.x, delta.y);
-                this.selectIntersectingControls(mouseDownAbsolutePos, delta);
+                this.drawMouseSelection(mouseDownAbsolutePos.x, mouseDownAbsolutePos.y, deltaWorld.x, deltaWorld.y);
+                this.selectIntersectingControls(mouseDownAbsolutePos, deltaWorld);
                 return false;
             }
         }
@@ -223,6 +226,15 @@ export class Controller {
         return false;
     }
 
+    onWheel(ev: WheelEvent) {
+        ev.preventDefault();
+        const mousePos = this.getMousePosition(ev);
+        const factor = ev.deltaY < 0 ? 1.1 : 1 / 1.1;
+        this.app.scene.camera.zoomAt(mousePos, factor);
+        this.app.scene.refresh();
+        this.app.notifyCameraChanged();
+    }
+
     drawMouseSelection(x: number, y: number, sizeX: number, sizeY: number) {
         this.app.canvas
             .save()
@@ -251,17 +263,19 @@ export class Controller {
 
     getAbsoluteMousePosition(ev: MouseEvent) {
         const cameraPos = this.app.scene.camera.position;
+        const scale = this.app.scene.camera.scale;
         const currentMousePosition = this.getMousePosition(ev);
-        const mouseAbsolutePos = new Vector2(currentMousePosition.x - cameraPos.x, currentMousePosition.y - cameraPos.y);
-
-        return mouseAbsolutePos;
+        return new Vector2(
+            (currentMousePosition.x - cameraPos.x) / scale,
+            (currentMousePosition.y - cameraPos.y) / scale);
     }
 
     getAbsoluteMouseDownPosition(ev: MouseEvent) {
         const cameraPos = this.app.scene.camera.position;
-        const mouseAbsolutePos = new Vector2(this._mouseDownData.position.x - cameraPos.x, this._mouseDownData.position.y - cameraPos.y);
-
-        return mouseAbsolutePos;
+        const scale = this.app.scene.camera.scale;
+        return new Vector2(
+            (this._mouseDownData.position.x - cameraPos.x) / scale,
+            (this._mouseDownData.position.y - cameraPos.y) / scale);
     }
 
     selectAllNodes() {

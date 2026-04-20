@@ -99,6 +99,16 @@ export abstract class NodeControl extends Container {
         return this._node.sourceText;
     }
 
+    public get name(): string {
+        return this._node.name;
+    }
+
+    public get searchableText(): string {
+        const title = this._node.title || "";
+        const subtitles = (this._node.subTitles || []).map(s => s.text).join(" ");
+        return `${title} ${subtitles}`.trim();
+    }
+
     protected get node(): Node {
         return this._node;
     }

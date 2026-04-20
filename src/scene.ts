@@ -24,6 +24,8 @@ export class Scene {
     private _nodes: Array<NodeControl>;
     private _pins: Array<PinControl>;
     private _interactables: Array<InteractableUserControl>;
+    private _focusedNodeNames: Set<string> | null = null;
+    private _hasExecConnections: boolean = false;
 
     private app;
 
@@ -90,6 +92,7 @@ export class Scene {
     }
 
     refresh() {
+        this.updateFocusSet();
         this._canvas.clear();
 
         this._controls.sort((a, b) => {
@@ -97,11 +100,59 @@ export class Scene {
         });
 
         this._camera.prepareViewport();
+
+        const ctx = this._canvas.getContext();
+        const focus = this._focusedNodeNames;
+
         this._controls.forEach((control) => {
-            if (isDrawableControl(control)) {
+            if (!isDrawableControl(control)) return;
+
+            let dimmed = false;
+            if (focus) {
+                if (control instanceof NodeControl) {
+                    dimmed = !focus.has(control.name);
+                } else if (control instanceof NodeConnectionControl) {
+                    const a = control.startNodeName;
+                    const b = control.endNodeName;
+                    dimmed = !(a && b && focus.has(a) && focus.has(b));
+                }
+            }
+
+            if (dimmed) {
+                ctx.save();
+                ctx.globalAlpha = 0.22;
+                (control as DrawableControl).draw(this._canvas);
+                ctx.restore();
+            } else {
                 (control as DrawableControl).draw(this._canvas);
             }
         });
+    }
+
+    get hasExecConnections(): boolean {
+        return this._hasExecConnections;
+    }
+
+    private updateFocusSet() {
+        const selected: string[] = [];
+        for (const n of this._nodes) {
+            if (n.selected) selected.push(n.name);
+        }
+        if (selected.length === 0) {
+            this._focusedNodeNames = null;
+            return;
+        }
+        const focus = new Set<string>(selected);
+        const selectedSet = new Set<string>(selected);
+        for (const control of this._controls) {
+            if (!(control instanceof NodeConnectionControl)) continue;
+            const a = control.startNodeName;
+            const b = control.endNodeName;
+            if (!a || !b) continue;
+            if (selectedSet.has(a)) focus.add(b);
+            if (selectedSet.has(b)) focus.add(a);
+        }
+        this._focusedNodeNames = focus;
     }
 
     unload() {
@@ -116,6 +167,9 @@ export class Scene {
         // Creates connection lines between pins
 
         this.createConnectionLines();
+
+        this._hasExecConnections = this._controls.some(
+            c => c instanceof NodeConnectionControl && (c as NodeConnectionControl).execWire);
 
         this.initializeControls();
     }

@@ -9,9 +9,6 @@
     <title>Klee - A UE Blueprint visualizer for the web</title>
 </head>
 <body>
-    <div class="background">
-        <div class="bg-rect"></div>
-    </div>
     <div class="page">
         <div class="header">
             <div class="navbar">
@@ -28,8 +25,12 @@
             </div>
         </div>
         <div class="jumbotron">
+            <div class="hero-meta">
+                <h2>Share Unreal Engine Blueprints <span class="accent">without screenshots</span></h2>
+                <p>Paste blueprint text straight from the editor. Pan, zoom, search, and share with a link.</p>
+                <div class="hero-hint">Try it: focus the canvas and press <kbd>Ctrl</kbd> + <kbd>V</kbd></div>
+            </div>
             <div class="hello-world">
-                <div class="copy-paste-here"></div>
                 <canvas class="klee" height="600px" data-klee-paste="true">
                 Begin Object Class=/Script/BlueprintGraph.K2Node_Event Name="K2Node_Event_0"
                     EventReference=(MemberParent=Class'"/Script/Engine.Actor"',MemberName="ReceiveBeginPlay")
@@ -154,7 +155,7 @@
                                     Support Klee by contributing directly to our repository on <a href="https://github.com/Joined-Forces/klee">Github</a> or spreading the word.
                                 </p>
                             </div>
-                            <canvas class="klee contribute" height="250px">
+                            <canvas class="klee contribute" height="250px" data-klee-embed="true">
                                 Begin Object Class=/Script/BlueprintGraph.K2Node_FunctionEntry Name="K2Node_FunctionEntry_0"
                                     FunctionReference=(MemberParent=Class'"/Script/Engine.Actor"',MemberName="UserConstructionScript")
                                     NodeGuid=31CF83F24A5A86F9C968EF9435EC19B2

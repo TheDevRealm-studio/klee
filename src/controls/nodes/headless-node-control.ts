@@ -29,9 +29,17 @@ export class HeadlessNodeControl extends NodeControl {
     }
 
     public onDraw(canvas: Canvas2D) {
+        const ctx = canvas.getContext();
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.45)";
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4;
+
         canvas.fillStyle(HeadlessNodeControl._NODE_BACKGROUND_COLOR)
             .roundedRectangle(0, 0, this.size.x, this.size.y, 16)
-            .fill()
+            .fill();
+        ctx.restore();
 
         this.drawTitle(canvas);
         this.drawFirstSubTitle(canvas);

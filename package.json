@@ -1,6 +1,6 @@
 {
     "name": "@mariojgt/eu-blueprint-visualizer",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Unreal Engine Blueprint Visualizer for the Web",
     "scripts": {
         "dev": "webpack serve --config webpack.dev.js",
@@ -17,13 +17,10 @@
         "NodeGraph"
     ],
     "author": {
-        "email": "contact@tinu.io",
-        "name": "Martin Hodler",
-        "url": "https://tinu.io"
+        "email": "mariojgt2@gmail.com",
+        "name": "Mario Tarosso",
+        "url": "https://thedevrealm.com"
     },
-    "contributors": [
-        "Pascal Aregger <pascal.aregger97@gmail.com>"
-    ],
     "devDependencies": {
         "ifdef-loader": "^2.3.2",
         "ts-loader": "^9.4.1",

@@ -1,54 +1,89 @@
-import { Application } from "../application";
 import { Camera } from "../camera";
 import { Canvas2D } from "../canvas";
 import { Control } from "./control";
 import { DrawableControl } from "./interfaces/drawable";
 
-// TODO: Don't implement as background control. Move to camera
 export class Background extends Control implements DrawableControl {
 
-    private static readonly BACKGROUND_SVG = 'data:image/svg+xml,' + escape('<svg width="96px" height="96px" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.5;"><rect x="0" y="0" width="96.375" height="96" style="fill:#262626;stroke:#262626;stroke-width:0.75px;"/><g>        <path d="M96.375,48.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/>        <path d="M96.375,60.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/>        <path d="M96.375,72.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/>        <path d="M96.375,84.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/>        <path d="M96.375,36.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/>        <path d="M96.375,24.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/>        <path d="M96.375,12.389l-96,-0" style="fill:none;stroke:#353535;stroke-width:0.75px;"/></g><path d="M48.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M36.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M24.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M12.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M60.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M72.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M84.375,96l-0,-96" style="fill:none;stroke:#353535;stroke-width:0.75px;"/><path d="M96,0l-96,0l0,96" style="fill:none;stroke:#161616;stroke-width:1.55px;"/></svg>');
+    private static readonly BASE_COLOR = "#161a22";
+    private static readonly MINOR_GRID_COLOR = "#1e232d";
+    private static readonly MAJOR_GRID_COLOR = "#262c38";
+    private static readonly AXIS_COLOR = "#0d0f14";
+    private static readonly SMALL_GRID = 16;
+    private static readonly LARGE_GRID = 128;
 
-    loaded: boolean;
-    ready: boolean;
-    image: HTMLImageElement;
-    pattern: CanvasPattern;
     camera: Camera;
 
     constructor(camera: Camera) {
         super(0, 0, -1000);
-
         this.camera = camera;
-        this.ready = false;
-
-        this.image = new Image();
-        this.image.onload = (ev) => this.onLoaded(ev);
-        this.image.src = Background.BACKGROUND_SVG;
-    }
-
-    override initialize() {
-        if (this.loaded)
-            this.initPattern();
     }
 
     draw(canvas: Canvas2D) {
-        if (!this.ready) return;
+        const scale = this.camera.scale;
+        const pan = this.camera.position;
 
-        canvas.fillStyle(this.pattern)
-            .fillRect(-this.camera.position.x, -this.camera.position.y, canvas.width, canvas.height);
-    }
+        const worldLeft = -pan.x / scale;
+        const worldTop = -pan.y / scale;
+        const worldWidth = canvas.width / scale;
+        const worldHeight = canvas.height / scale;
 
-    private onLoaded(ev : Event) {
-        this.loaded = true;
-        if (this.app) {
-            this.initPattern();
+        canvas.fillStyle(Background.BASE_COLOR)
+            .fillRect(worldLeft - 4 / scale, worldTop - 4 / scale, worldWidth + 8 / scale, worldHeight + 8 / scale);
+
+        const ctx = canvas.getContext();
+
+        const minorAlpha = scale < 0.5 ? 0 : Math.min(1, (scale - 0.3) / 0.6);
+        if (minorAlpha > 0.02) {
+            ctx.save();
+            ctx.globalAlpha = minorAlpha;
+            ctx.strokeStyle = Background.MINOR_GRID_COLOR;
+            ctx.lineWidth = 1 / scale;
+            ctx.beginPath();
+            const minorX0 = Math.floor(worldLeft / Background.SMALL_GRID) * Background.SMALL_GRID;
+            const minorY0 = Math.floor(worldTop / Background.SMALL_GRID) * Background.SMALL_GRID;
+            for (let x = minorX0; x <= worldLeft + worldWidth; x += Background.SMALL_GRID) {
+                ctx.moveTo(x, worldTop);
+                ctx.lineTo(x, worldTop + worldHeight);
+            }
+            for (let y = minorY0; y <= worldTop + worldHeight; y += Background.SMALL_GRID) {
+                ctx.moveTo(worldLeft, y);
+                ctx.lineTo(worldLeft + worldWidth, y);
+            }
+            ctx.stroke();
+            ctx.restore();
         }
-    }
 
-    private initPattern() {
-        this.pattern = this.app.canvas.getContext().createPattern(this.image, 'repeat');
-        this.ready = true;
+        ctx.save();
+        ctx.strokeStyle = Background.MAJOR_GRID_COLOR;
+        ctx.lineWidth = 1 / scale;
+        ctx.beginPath();
+        const majorX0 = Math.floor(worldLeft / Background.LARGE_GRID) * Background.LARGE_GRID;
+        const majorY0 = Math.floor(worldTop / Background.LARGE_GRID) * Background.LARGE_GRID;
+        for (let x = majorX0; x <= worldLeft + worldWidth; x += Background.LARGE_GRID) {
+            ctx.moveTo(x, worldTop);
+            ctx.lineTo(x, worldTop + worldHeight);
+        }
+        for (let y = majorY0; y <= worldTop + worldHeight; y += Background.LARGE_GRID) {
+            ctx.moveTo(worldLeft, y);
+            ctx.lineTo(worldLeft + worldWidth, y);
+        }
+        ctx.stroke();
+        ctx.restore();
 
-        this.app.scene.refresh();
+        ctx.save();
+        ctx.strokeStyle = Background.AXIS_COLOR;
+        ctx.lineWidth = 1.5 / scale;
+        ctx.beginPath();
+        if (worldTop <= 0 && worldTop + worldHeight >= 0) {
+            ctx.moveTo(worldLeft, 0);
+            ctx.lineTo(worldLeft + worldWidth, 0);
+        }
+        if (worldLeft <= 0 && worldLeft + worldWidth >= 0) {
+            ctx.moveTo(0, worldTop);
+            ctx.lineTo(0, worldTop + worldHeight);
+        }
+        ctx.stroke();
+        ctx.restore();
     }
 }
